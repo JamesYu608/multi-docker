@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jamesyu608/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run jamesyu608/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t jamesyu608/mutli-client ./client
+  - docker build -t jamesyu608/mutli-nginx ./nginx
+  - docker build -t jamesyu608/mutli-server ./server
+  - docker build -t jamesyu608/mutli-worker ./worker
+  # Log in to the docker CI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push jamesyu608/mutli-client
+  - docker push jamesyu608/mutli-nginx
+  - docker push jamesyu608/mutli-server
+  - docker push jamesyu608/mutli-worker
